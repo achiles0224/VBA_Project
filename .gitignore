@@ -1,0 +1,29 @@
+# 資料檔（不追蹤）
+*.csv
+*.xlsx
+*.xls
+*.xlsb
+*.xlsm
+
+# 文件檔（不追蹤）
+*.pdf
+*.docx
+*.doc
+*.pptx
+*.key
+*.rtf
+*.ppt
+
+# 其他
+*.xml
+*.XML
+*.zip
+*.db
+
+# Excel / Word 暫存檔
+~$*
+
+# 系統與工具
+.DS_Store
+.vscode/
+backup/

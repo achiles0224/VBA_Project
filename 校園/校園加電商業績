@@ -1,0 +1,748 @@
+'校園門市S801業績'20241202 將NoteBook 拆成MBA\MBP
+'S099專案改用門市代碼ex:S099_S001 取右邊四碼判斷
+'增加iPad認證機5098
+'20250203修正專案SAcare為算入(SA099_Sxxx)
+'20250428調整 iPad 、iPad Air 、欄位位子
+'iPad 抓 類別5 iPad9(5099) 、iPad10(5507) 、 iPad11 (5467)
+'iPad Air 抓 類別5 iPad Air 2022(5506)、iPad Air 2024(5559)、iPad Air 2025(5466)
+'20250429修正專案iPad問題
+'20250619 新增一頁預算用統計、Desktop 拆分 iMac、Mac mini、Mac Studio，Watch 拆分 SE、S10、Ultra2
+'20250923 調整 Watch 拆分 SE (5445 5454 5462 5474)、S11 (5439 5446 5453 5460 5472)、Ultra 3 (5447 5455 5461 5473)
+Sub S801_sales()
+    
+    Worksheets("校園門市加電商業績").Select
+    Set ws = ThisWorkbook.Sheets("校園門市加電商業績")
+    TrowsCounts = ws.Range("A1").CurrentRegion.Rows.Count
+    TlineCounts = ws.Range("A1").CurrentRegion.Columns.Count
+
+    Worksheets("report").Select
+    Dim ws_report As Worksheet
+    Set ws_report = ThisWorkbook.Sheets("report")
+    RrowsCounts = ws_report.Range("A1").CurrentRegion.Rows.Count
+    RlineCounts = ws_report.Range("A1").CurrentRegion.Columns.Count
+
+    Worksheets("預算用").Select
+    Dim ws_budget As Worksheet
+    Set ws_budget = ThisWorkbook.Sheets("預算用")
+    BudgetRowsCounts = ws_budget.Range("A1").CurrentRegion.Rows.Count
+    BudgetLineCounts = ws_budget.Range("A1").CurrentRegion.Columns.Count
+
+    If ws_report.Cells(RrowsCounts, 2).Value = "總計" Then
+        ws_report.Range(ws_report.Cells(2, 3), ws_report.Cells(RrowsCounts, RlineCounts)).Clear
+        ws_report.Cells(RrowsCounts, 2).Clear
+    End If
+
+    If ws_budget.Cells(BudgetRowsCounts, 2).Value = "總計" Then
+        ws_budget.Range(ws_budget.Cells(2, 3), ws_budget.Cells(BudgetRowsCounts, BudgetLineCounts)).Clear
+        ws_budget.Cells(BudgetRowsCounts, 2).Clear
+    End If
+
+    RrowsCounts = ws_report.Range("A1").CurrentRegion.Rows.Count
+    RlineCounts = ws_report.Range("A1").CurrentRegion.Columns.Count
+
+    BudgetRowsCounts = ws_budget.Range("A1").CurrentRegion.Rows.Count
+    BudgetLineCounts = ws_budget.Range("A1").CurrentRegion.Columns.Count
+
+    Dim TotalAmount, CPUAmount, A3PPAmount, CPU_TQTY, iPad_TQTY, iPadPro_TQTY, iPhone_Amount, Watch_TQTY, SAC_Watch As Long
+    Dim iPod_TQTY, ACPP_CPU, SAC_CPU, SAC_iOS, P3PP_Amount, Price_Good, ePen, GPM As Long
+    '變數定義
+    Total3ppAmount = 0 '3pp總營業額 2002
+    TotalAmount = 0
+    SACareTotal = 0 'SA Care金額' 4040
+    Desktop = 0 '4001
+    iMac = 0 '5001
+    Macmini = 0 '5002
+    MacStudio = 0 '5003 5105
+    NoteBook = 0 '4002
+    MBA = 0 '5008
+    MBP = 0 '5005 5006 5007
+    iPhone = 0 '4004
+    iPad9 = 0  '5099
+    iPad10 = 0 '5507
+    iPadAir = 0  '5506
+    iPadmini = 0  '4006
+    iPadPro = 0 '4041
+    AppleWatch = 0 '4038
+    SE = 0 '(5445 5454 5462 5474
+    S10 = 0 '5460 5439 5446 5453 5460 5472
+    Ultra2 = 0 '5447 5455 5461 5473
+    Acpp = 0  '4969
+    SACareNew = 0 '
+
+    MacCare = 0 '5806&6533
+    iOSCare = 0 '5806&6534 & 6534
+    iPadCare = 0 '6534
+
+    '-----
+    Dim tempC2 As String, tempC3 As String, tempC4 As String
+    Dim tempC5 As String, tempC6 As String
+    Dim Qty As Double, Amt As Double
+    Dim i  As Long, j As Long, k As Long
+
+    For i = 2 To TrowsCounts
+        shopID = ws.Cells(i, 1).Value
+        ref2ID = ws.Cells(i, 2).Value
+        tempC2 = ws.Cells(i, 3).Value
+        tempC3 = ws.Cells(i, 5).Value
+        tempC4 = ws.Cells(i, 7).Value
+        tempC5 = ws.Cells(i, 9).Value
+        tempC6 = ws.Cells(i, 11).Value
+        Amt = ws.Cells(i, 14).Value
+        Qty = ws.Cells(i, 13).Value
+
+        For j = 2 To RrowsCounts
+            If (ws_report.Cells(j, 1).Value = Right(shopID, 4)) Or (ws_report.Cells(j, 1).Value = Right(ref2ID, 4)) Then
+                ws_report.Cells(j, 3).Value = ws_report.Cells(j, 3).Value + Amt
+                Call Cat_category(ws_report, j, tempC2, tempC3, tempC4, tempC5, tempC6, Qty, Amt)
+            End If
+        Next
+        For j = 2 To BudgetRowsCounts
+            If (ws_budget.Cells(j, 1).Value = Right(shopID, 4)) Or (ws_budget.Cells(j, 1).Value = Right(ref2ID, 4)) Then
+                ws_budget.Cells(j, 3).Value = ws_budget.Cells(j, 3).Value + Amt
+                Call Budget_Cat_category(ws_budget, j, tempC2, tempC3, tempC4, tempC5, tempC6, Qty, Amt)
+            End If
+        Next
+        
+    Next
+ 
+For i = 2 To RrowsCounts Step 1
+    Total = ws_report.Cells(i, 3).Value
+    For j = 4 To RlineCounts Step 1
+        addall = addall + ws_report.Cells(i, j).Value
+    Next j
+    'ws_report.Cells(i, 19).Value = Total - addall
+    addall = 0
+    Total = 0
+Next i
+
+For i = 2 To BudgetRowsCounts Step 1
+    Total = ws_budget.Cells(i, 3).Value
+    For j = 4 To BudgetLineCounts Step 1
+        addall = addall + ws_budget.Cells(i, j).Value
+    Next j
+    addall = 0
+    Total = 0
+Next i
+
+For j = 3 To RlineCounts
+        Total = 0
+        For i = 2 To RrowsCounts
+            Total = Total + ws_report.Cells(i, j).Value
+        Next i
+        ws_report.Cells(RrowsCounts + 1, j).Value = Total
+Next j
+
+For j = 3 To BudgetLineCounts
+        Total = 0
+        For i = 2 To BudgetRowsCounts
+            Total = Total + ws_budget.Cells(i, j).Value
+        Next i
+        ws_budget.Cells(BudgetRowsCounts + 1, j).Value = Total
+Next j
+
+
+ws_report.Cells(RrowsCounts + 1, 2).Value = "總計"
+ws_budget.Cells(BudgetRowsCounts + 1, 2).Value = "總計"
+    Set ws = Nothing
+    Set ws_report = Nothing
+    Set ws_budget = Nothing
+    Application.CutCopyMode = False
+    MsgBox "done"
+End Sub
+    
+Sub SAcareProcess()
+
+    Worksheets("SAcare").Select
+    Set ws = ThisWorkbook.Sheets("SAcare")
+    TrowsCounts = ws.Range("A1").CurrentRegion.Rows.Count
+    TlineCounts = ws.Range("A1").CurrentRegion.Columns.Count
+
+    Worksheets("SACare價目表").Select
+    Set ws_sac = ThisWorkbook.Sheets("SACare價目表")
+    SACrowsCounts = ws_sac.Range("A1").CurrentRegion.Rows.Count
+    SAClineCounts = ws_sac.Range("A1").CurrentRegion.Columns.Count
+
+    Worksheets("report").Select
+    Set ws_report = ThisWorkbook.Sheets("report")
+    RrowsCounts = ws_report.Range("A1").CurrentRegion.Rows.Count
+    RlineCounts = ws_report.Range("A1").CurrentRegion.Columns.Count
+
+    Worksheets("預算用").Select
+    Set ws_budget = ThisWorkbook.Sheets("預算用")
+    BudgetRowsCounts = ws_budget.Range("A1").CurrentRegion.Rows.Count
+    BudgetLineCounts = ws_budget.Range("A1").CurrentRegion.Columns.Count
+
+    For i = 2 To TrowsCounts Step 1
+        For j = 2 To SACrowsCounts Step 1
+            If ws.Cells(i, 3) = ws_sac.Cells(j, 1) Then
+                ws.Cells(i, 8).Value = ws.Cells(i, 7).Value * ws_sac.Cells(j, 3).Value
+                Exit For
+            End If
+        Next j
+    Next i
+
+    For i = 2 To TrowsCounts Step 1
+        For j = 2 To RrowsCounts Step 1
+            If (ws_report.Cells(j, 1).Value = ws.Cells(i, 1).Value) Or (ws_report.Cells(j, 1).Value = Right(ws.Cells(i, 2).Value, 4)) Or (ws_report.Cells(j, 1).Value = Right(ws.Cells(i, 1).Value, 4)) Then
+                ws_report.Cells(j, 5).Value = ws_report.Cells(j, 5).Value + ws.Cells(i, 8).Value
+                Exit For
+            End If
+        Next j
+        For j = 2 To BudgetRowsCounts Step 1
+            If (ws_budget.Cells(j, 1).Value = ws.Cells(i, 1).Value) Or (ws_budget.Cells(j, 1).Value = Right(ws.Cells(i, 2).Value, 4)) Or (ws_budget.Cells(j, 1).Value = Right(ws.Cells(i, 1).Value, 4)) Then
+                ws_budget.Cells(j, 5).Value = ws_budget.Cells(j, 5).Value + ws.Cells(i, 8).Value
+                Exit For
+            End If
+        Next j
+    Next i
+    SACTotal = 0
+    all_total = 0
+    b_SACTotal = 0
+    b_all_total = 0
+
+    For i = 2 To RrowsCounts - 1 Step 1
+        SACTotal = SACTotal + ws_report.Cells(i, 5).Value
+        ws_report.Cells(i, 3).Value = ws_report.Cells(i, 3).Value + ws_report.Cells(i, 5).Value
+        all_total = all_total + ws_report.Cells(i, 3).Value
+    Next i
+    For i = 2 To BudgetRowsCounts - 1 Step 1
+        b_SACTotal = b_SACTotal + ws_budget.Cells(i, 5).Value
+        ws_budget.Cells(i, 3).Value = ws_budget.Cells(i, 3).Value + ws_budget.Cells(i, 5).Value
+        b_all_total = b_all_total + ws_budget.Cells(i, 3).Value
+    Next i
+    ws_report.Cells(RrowsCounts, 5).Value = SACTotal
+    ws_report.Cells(RrowsCounts, 3).Value = all_total
+    ws_budget.Cells(RrowsCounts, 5).Value = SACTotal
+    ws_budget.Cells(RrowsCounts, 3).Value = all_total
+
+    Set ws = Nothing
+    Set ws_sac = Nothing
+    Set ws_report = Nothing
+    Set ws_budget = Nothing
+    Application.CutCopyMode = False
+    MsgBox "SACare done"
+End Sub
+
+Sub EC_deduction()
+    Worksheets("S801減項_S099專案").Select
+    Worksheets("S801減項_S099專案").Range("P:P").Clear
+    Set ws_EC_de = ThisWorkbook.Sheets("S801減項_S099專案")
+    ErowsCounts = ws_EC_de.Range("A1").CurrentRegion.Rows.Count
+    ElineCounts = ws_EC_de.Range("A1").CurrentRegion.Columns.Count
+
+    Worksheets("report").Select
+    Dim ws_report As Worksheet
+    Set ws_report = ThisWorkbook.Sheets("report")
+    RrowsCounts = ws_report.Range("B1").CurrentRegion.Rows.Count
+    RlineCounts = ws_report.Range("B1").CurrentRegion.Columns.Count
+
+    Worksheets("預算用").Select
+    Dim ws_budget As Worksheet
+    Set ws_budget = ThisWorkbook.Sheets("預算用")
+    BudgetRowsCounts = ws_budget.Range("B1").CurrentRegion.Rows.Count
+    BudgetLineCounts = ws_budget.Range("B1").CurrentRegion.Columns.Count
+
+    Worksheets("門市人員").Select
+    Worksheets("門市人員").Columns("A:G").Sort key1:=Range("A1"), order1:=xlAscending, Header:=xlYes
+    Set ws_ShopStaff = ThisWorkbook.Sheets("門市人員")
+    StaffrowsCounts = ws_ShopStaff.Range("A1").CurrentRegion.Rows.Count
+    StafflineCounts = ws_ShopStaff.Range("A1").CurrentRegion.Columns.Count
+
+    Dim tempC2 As String, tempC3 As String, tempC4 As String
+    Dim tempC5 As String, tempC6 As String
+    Dim Qty As Double, Amt As Double
+    Dim i  As Long, j As Long, k As Long
+    '先依照員工代碼、單據日期判斷減項表的員工是否在門市員工表內,單據日期是否在員工任職內
+    For i = 2 To ErowsCounts Step 1 'S801減項為主表
+        ShopID_staff = ""
+        Amt = 0
+        Qty = 0
+        If IsDate(ws_EC_de.Cells(i, "A")) Then
+            For j = 2 To StaffrowsCounts Step 1 '判斷S801減項員工代碼跟門市員工代碼相同 且 單據日期大於等於門市人員調動的日期
+                If ws_EC_de.Cells(i, "B") = ws_ShopStaff.Cells(j, "B") And CDate(ws_EC_de.Cells(i, "A")) >= CDate(ws_ShopStaff.Cells(j, "A")) And ws_EC_de.Cells(i, "A") <> "Σ" And UCase(ws_ShopStaff.Cells(j, "D").Value) = "S801" Then
+                    ShopID_staff = ws_ShopStaff.Cells(j, "C")
+                    ws_EC_de.Cells(i, "P") = ShopID_staff
+
+                End If
+            Next j
+        End If
+        If ShopID_staff <> "" Then '有員工的門市代碼才帶入
+            For k = 2 To RrowsCounts Step 1
+                If ws_report.Cells(k, "A") = ShopID_staff Then '比對相同門市代碼，依888、跟品項
+                    If ws_EC_de.Cells(i, "M") = "888" Then
+                        ws_report.Cells(k, "C") = ws_report.Cells(k, "C") + ws_EC_de.Cells(i, "O")
+                        'ws_report.cells(RrowsCounts,"C") = ws_report.cells(RrowsCounts,"C") + ws_EC_de.cells(i,"O")
+                        Exit For
+                    Else
+                        tempC2 = ws_EC_de.Cells(i, "C").Value
+                        tempC4 = ws_EC_de.Cells(i, "G").Value
+                        tempC5 = ws_EC_de.Cells(i, "I").Value
+                        tempC6 = ws_EC_de.Cells(i, "K").Value
+                        tempC3 = ws_EC_de.Cells(i, "E").Value
+                        Amt = ws_EC_de.Cells(i, "O").Value
+                        Qty = ws_EC_de.Cells(i, "N").Value
+
+                        ws_report.Cells(k, "C") = ws_report.Cells(k, "C") + ws_EC_de.Cells(i, "O")
+                        Call Cat_category(ws_report, k, tempC2, tempC3, tempC4, tempC5, tempC6, Qty, Amt)
+                        
+                        'ws_report.cells(RrowsCounts,"C") = ws_report.cells(RrowsCounts,"C") + Amt
+                    End If
+                End If
+            Next k
+            For k = 2 To BudgetRowsCounts Step 1
+                If ws_budget.Cells(k, "A") = ShopID_staff Then '比對相同門市代碼，依888、跟品項
+                    If ws_EC_de.Cells(i, "M") = "888" Then
+                        ws_budget.Cells(k, "C") = ws_budget.Cells(k, "C") + ws_EC_de.Cells(i, "O")
+                        Exit For
+                    Else
+                        tempC2 = ws_EC_de.Cells(i, "C").Value
+                        tempC4 = ws_EC_de.Cells(i, "G").Value
+                        tempC5 = ws_EC_de.Cells(i, "I").Value
+                        tempC6 = ws_EC_de.Cells(i, "K").Value
+                        tempC3 = ws_EC_de.Cells(i, "E").Value
+                        Amt = ws_EC_de.Cells(i, "O").Value
+                        Qty = ws_EC_de.Cells(i, "N").Value
+
+                        ws_budget.Cells(k, "C") = ws_budget.Cells(k, "C") + ws_EC_de.Cells(i, "O")
+                        Call Budget_Cat_category(ws_budget, k, tempC2, tempC3, tempC4, tempC5, tempC6, Qty, Amt)
+                        
+                    End If
+                End If
+            Next k
+
+        End If
+        
+    Next i
+    '最後總和
+    For j = 3 To RlineCounts Step 1
+        finalAmount = 0
+        For i = 2 To RrowsCounts - 1 Step 1
+            finalAmount = finalAmount + ws_report.Cells(i, j)
+        Next i
+        ws_report.Cells(RrowsCounts, j) = finalAmount
+    Next j
+    For j = 3 To BudgetLineCounts Step 1
+        finalAmount = 0
+        For i = 2 To BudgetRowsCounts - 1 Step 1
+            finalAmount = finalAmount + ws_budget.Cells(i, j)
+        Next i
+        ws_budget.Cells(BudgetRowsCounts, j) = finalAmount
+    Next j
+    Set ws_EC_de = Nothing
+    Set ws_report = Nothing
+    Set ws_ShopStaff = Nothing
+    Set ws_budget = Nothing
+    Application.CutCopyMode = False
+   Worksheets("report").Select
+    MsgBox "S801減項 Done"
+End Sub
+
+Sub Project_S099()
+    Worksheets("S801減項_S099專案").Select
+    Worksheets("S801減項_S099專案").Range("P:P").Clear
+    Set ws_EC_de = ThisWorkbook.Sheets("S801減項_S099專案")
+    ErowsCounts = ws_EC_de.Range("A1").CurrentRegion.Rows.Count
+    ElineCounts = ws_EC_de.Range("A1").CurrentRegion.Columns.Count
+
+    Worksheets("report").Select
+    Dim ws_report As Worksheet
+    Set ws_report = ThisWorkbook.Sheets("report")
+    RrowsCounts = ws_report.Range("B1").CurrentRegion.Rows.Count
+    RlineCounts = ws_report.Range("B1").CurrentRegion.Columns.Count
+
+    Worksheets("預算用").Select
+    Dim ws_budget As Worksheet
+    Set ws_budget = ThisWorkbook.Sheets("預算用")
+    BudgetRowsCounts = ws_budget.Range("B1").CurrentRegion.Rows.Count
+    BudgetLineCounts = ws_budget.Range("B1").CurrentRegion.Columns.Count
+
+    Worksheets("門市人員").Select
+    Worksheets("門市人員").Columns("A:G").Sort key1:=Range("A1"), order1:=xlAscending, Header:=xlYes
+    Set ws_ShopStaff = ThisWorkbook.Sheets("門市人員")
+    StaffrowsCounts = ws_ShopStaff.Range("A1").CurrentRegion.Rows.Count
+    StafflineCounts = ws_ShopStaff.Range("A1").CurrentRegion.Columns.Count
+
+    Dim tempC2 As String, tempC3 As String, tempC4 As String
+    Dim tempC5 As String, tempC6 As String
+    Dim Qty As Double, Amt As Double
+    Dim i  As Long, j As Long, k As Long
+    '先依照員工代碼、單據日期判斷減項表的員工是否在門市員工表內,單據日期是否在員工任職內
+    For i = 2 To ErowsCounts Step 1 'S099減項為主表
+        ShopID_staff = ""
+        Amt = 0
+        Qty = 0
+        If IsDate(ws_EC_de.Cells(i, "A")) Then
+            For j = 2 To StaffrowsCounts Step 1 '判斷S099減項員工代碼跟門市員工代碼相同 且 單據日期大於等於門市人員調動的日期
+                If ws_EC_de.Cells(i, "B") = ws_ShopStaff.Cells(j, "B") And CDate(ws_EC_de.Cells(i, "A")) >= CDate(ws_ShopStaff.Cells(j, "A")) And ws_EC_de.Cells(i, "A") <> "Σ" And UCase(ws_ShopStaff.Cells(j, "D").Value) = "S099" Then
+                    ShopID_staff = ws_ShopStaff.Cells(j, "C")
+                    ws_EC_de.Cells(i, "P") = ShopID_staff
+
+                End If
+            Next j
+        End If
+        If ShopID_staff <> "" Then '有員工的門市代碼才帶入
+            For k = 2 To RrowsCounts Step 1
+                If ws_report.Cells(k, "A") = ShopID_staff Then '比對相同門市代碼，依888、跟品項
+                    If ws_EC_de.Cells(i, "M") = "888" Then
+                        ws_report.Cells(k, "C") = ws_report.Cells(k, "C") + ws_EC_de.Cells(i, "O")
+                        'ws_report.cells(RrowsCounts,"C") = ws_report.cells(RrowsCounts,"C") + ws_EC_de.cells(i,"O")
+                        Exit For
+                    Else
+                        tempC2 = ws_EC_de.Cells(i, "C").Value
+                        tempC4 = ws_EC_de.Cells(i, "G").Value
+                        tempC5 = ws_EC_de.Cells(i, "I").Value
+                        tempC6 = ws_EC_de.Cells(i, "K").Value
+                        tempC3 = ws_EC_de.Cells(i, "E").Value
+                        Amt = ws_EC_de.Cells(i, "O").Value
+                        Qty = ws_EC_de.Cells(i, "N").Value
+
+                        ws_report.Cells(k, "C") = ws_report.Cells(k, "C") + ws_EC_de.Cells(i, "O")
+                        Call Cat_category(ws_report, k, tempC2, tempC3, tempC4, tempC5, tempC6, Qty, Amt)
+                        'ws_report.cells(RrowsCounts,"C") = ws_report.cells(RrowsCounts,"C") + Amt
+                    End If
+                End If
+            Next k
+            For k = 2 To BudgetRowsCounts Step 1
+                If ws_budget.Cells(k, "A") = ShopID_staff Then '比對相同門市代碼，依888、跟品項
+                    If ws_EC_de.Cells(i, "M") = "888" Then
+                        ws_budget.Cells(k, "C") = ws_budget.Cells(k, "C") + ws_EC_de.Cells(i, "O")
+                        
+                        Exit For
+                    Else
+                        tempC2 = ws_EC_de.Cells(i, "C").Value
+                        tempC4 = ws_EC_de.Cells(i, "G").Value
+                        tempC5 = ws_EC_de.Cells(i, "I").Value
+                        tempC6 = ws_EC_de.Cells(i, "K").Value
+                        tempC3 = ws_EC_de.Cells(i, "E").Value
+                        Amt = ws_EC_de.Cells(i, "O").Value
+                        Qty = ws_EC_de.Cells(i, "N").Value
+
+                        ws_budget.Cells(k, "C") = ws_budget.Cells(k, "C") + ws_EC_de.Cells(i, "O")
+                        Call Budget_Cat_category(ws_budget, k, tempC2, tempC3, tempC4, tempC5, tempC6, Qty, Amt)
+                        
+                    End If
+                End If
+            Next k
+
+        End If
+        
+    Next i
+    '最後總和
+    For j = 3 To RlineCounts Step 1
+        finalAmount = 0
+        For i = 2 To RrowsCounts - 1 Step 1
+            finalAmount = finalAmount + ws_report.Cells(i, j)
+        Next i
+        ws_report.Cells(RrowsCounts, j) = finalAmount
+    Next j
+    For j = 3 To BudgetLineCounts Step 1
+        finalAmount = 0
+        For i = 2 To BudgetRowsCounts - 1 Step 1
+            finalAmount = finalAmount + ws_budget.Cells(i, j)
+        Next i
+        ws_budget.Cells(BudgetRowsCounts, j) = finalAmount
+    Next j
+    Set ws_EC_de = Nothing
+    Set ws_report = Nothing
+    Set ws_ShopStaff = Nothing
+    Set ws_budget = Nothing
+    Application.CutCopyMode = False
+    Worksheets("report").Select
+    MsgBox "S099專案 Done"
+End Sub
+
+Sub clearolddata()
+
+    Worksheets("校園門市加電商業績").Select
+    Set ws = ThisWorkbook.Sheets("校園門市加電商業績")
+    TrowsCounts = ws.Range("A1").CurrentRegion.Rows.Count
+    TlineCounts = ws.Range("A1").CurrentRegion.Columns.Count
+
+    Worksheets("report").Select
+    Set ws_report = ThisWorkbook.Sheets("report")
+    RrowsCounts = ws_report.Range("A1").CurrentRegion.Rows.Count
+    RlineCounts = ws_report.Range("A1").CurrentRegion.Columns.Count
+
+    Worksheets("預算用").Select
+    Set ws_budget = ThisWorkbook.Sheets("預算用")
+    BudgetRowsCounts = ws_budget.Range("A1").CurrentRegion.Rows.Count
+    BudgetLineCounts = ws_budget.Range("A1").CurrentRegion.Columns.Count
+
+    Worksheets("SAcare").Select
+    Set ws_Sacare = ThisWorkbook.Sheets("SAcare")
+    SrowsCounts = ws_Sacare.Range("A1").CurrentRegion.Rows.Count
+    SlineCounts = ws_Sacare.Range("A1").CurrentRegion.Columns.Count
+
+    Worksheets("S801減項_S099專案").Select
+    Set ws_EC888 = ThisWorkbook.Sheets("S801減項_S099專案")
+    ErowsCounts = ws_EC888.Range("A1").CurrentRegion.Rows.Count
+    ElineCounts = ws_EC888.Range("A1").CurrentRegion.Columns.Count
+
+    ws.Range(ws.Cells(2, 1), ws.Cells(TrowsCounts, TlineCounts)).Clear
+    ws_report.Range(ws_report.Cells(2, 3), ws_report.Cells(RrowsCounts + 1, RlineCounts)).Clear
+    ws_budget.Range(ws_budget.Cells(2, 3), ws_budget.Cells(BudgetRowsCounts + 1, BudgetLineCounts)).Clear
+
+    ws_Sacare.Range(ws_Sacare.Cells(2, 1), ws_Sacare.Cells(SrowsCounts, SlineCounts)).Clear
+    ws_Sacare.Range("H:H").Clear
+
+    ws_EC888.Range(ws_EC888.Cells(2, 1), ws_EC888.Cells(ErowsCounts, ElineCounts)).Clear
+
+    Set ws = Nothing
+    Set ws_report = Nothing
+    Set ws_Sacare = Nothing
+    Set ws_EC888 = Nothing
+    Set ws_budget = Nothing
+    Application.CutCopyMode = False
+
+    MsgBox "Done"
+End Sub
+
+Sub Cat_category(ws_report As Worksheet, index_row As Long, tempC2 As String, tempC3 As String, tempC4 As String, tempC5 As String, tempC6 As String, Qty As Double, Amt As Double)
+    Select Case tempC2
+                Case Is = "2028"
+                        Select Case tempC4
+                            Case Is = "4969"
+                                ws_report.Cells(index_row, "O").Value = ws_report.Cells(index_row, "O").Value + Qty
+                        End Select
+                End Select
+                Select Case tempC3
+                    Case Is = "3003"
+                        ws_report.Cells(index_row, "D").Value = ws_report.Cells(index_row, "D").Value + Amt
+                End Select
+                Select Case tempC4
+                    Case Is = "4001"
+                        ws_report.Cells(index_row, "F").Value = ws_report.Cells(index_row, "F").Value + Qty
+                    'Case Is = "4002"
+                        'ws_report.Cells(index_row, "G").Value = ws_report.Cells(index_row, "G").Value + Qty
+                    Case Is = "4004"
+                        ws_report.Cells(index_row, "I").Value = ws_report.Cells(index_row, "I").Value + Qty
+                    Case Is = "4006"
+                        ws_report.Cells(index_row, "L").Value = ws_report.Cells(index_row, "L").Value + Qty
+                    Case Is = "4038"
+                        ws_report.Cells(index_row, "N").Value = ws_report.Cells(index_row, "N").Value + Qty
+                    Case Is = "4040"
+                        'ws_report.Cells(index_row, 5).Value = ws_report.Cells(index_row, 5).Value + amt
+                    Case Is = "4041"
+                        ws_report.Cells(index_row, "M").Value = ws_report.Cells(index_row, "M").Value + Qty
+                    'Case Is = "4969"
+                        'ws_report.Cells(index_row, "O").Value = ws_report.Cells(index_row, "O").Value + Qty
+                End Select
+
+                Select Case tempC5
+                    Case Is = "5005"
+                        ws_report.Cells(index_row, "H").Value = ws_report.Cells(index_row, "H").Value + Qty
+                    Case Is = "5006"
+                        ws_report.Cells(index_row, "H").Value = ws_report.Cells(index_row, "H").Value + Qty
+                    Case Is = "5007"
+                        ws_report.Cells(index_row, "H").Value = ws_report.Cells(index_row, "H").Value + Qty
+                    Case Is = "5008"
+                        ws_report.Cells(index_row, "G").Value = ws_report.Cells(index_row, "G").Value + Qty
+                    Case Is = "5098"
+                        ws_report.Cells(index_row, "K").Value = ws_report.Cells(index_row, "K").Value + Qty
+                    Case Is = "5099"
+                        ws_report.Cells(index_row, "J").Value = ws_report.Cells(index_row, "J").Value + Qty
+                    Case Is = "5506"
+                        ws_report.Cells(index_row, "K").Value = ws_report.Cells(index_row, "K").Value + Qty
+                    Case Is = "5507"
+                        ws_report.Cells(index_row, "J").Value = ws_report.Cells(index_row, "J").Value + Qty
+                    Case Is = "5466"
+                        ws_report.Cells(index_row, "K").Value = ws_report.Cells(index_row, "K").Value + Qty
+                    Case Is = "5467"
+                        ws_report.Cells(index_row, "J").Value = ws_report.Cells(index_row, "J").Value + Qty
+                    Case Is = "5559"
+                        ws_report.Cells(index_row, "K").Value = ws_report.Cells(index_row, "K").Value + Qty
+                    
+                    Case Is = "5805"
+                        Select Case tempC6
+                            Case Is = "6532"
+                                ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                            Case Is = "6533"
+                                ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                            Case Is = "6546"
+                                ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                        End Select
+                    Case Is = "5806"
+                        Select Case tempC6
+                            Case Is = "6532"
+                                ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                            Case Is = "6533"
+                                ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                            Case Is = "6534"
+                                ws_report.Cells(index_row, "Q").Value = ws_report.Cells(index_row, "Q").Value + Qty
+                                ws_report.Cells(index_row, "R").Value = ws_report.Cells(index_row, "R").Value + Qty
+                            Case Is = "6535"
+                                ws_report.Cells(index_row, "Q").Value = ws_report.Cells(index_row, "Q").Value + Qty
+                            'Case Is = "6536"
+                                'ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                            'Case Is = "6537"
+                                'ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                            Case Is = "6546"
+                                ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                        End Select
+                    Case Is = "5807"
+                        Select Case tempC6
+                            Case Is = "6532"
+                                ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                            Case Is = "6533"
+                                ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                            Case Is = "6534"
+                                ws_report.Cells(index_row, "Q").Value = ws_report.Cells(index_row, "Q").Value + Qty
+                                ws_report.Cells(index_row, "R").Value = ws_report.Cells(index_row, "R").Value + Qty
+                            Case Is = "6535"
+                                ws_report.Cells(index_row, "Q").Value = ws_report.Cells(index_row, "Q").Value + Qty
+                            'Case Is = "6536"
+                                'ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                            'Case Is = "6537"
+                                'ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                            Case Is = "6546"
+                                ws_report.Cells(index_row, "P").Value = ws_report.Cells(index_row, "P").Value + Qty
+                        End Select
+
+                End Select
+End Sub
+
+
+Sub Budget_Cat_category(ws_budget As Worksheet, index_row As Long, tempC2 As String, tempC3 As String, tempC4 As String, tempC5 As String, tempC6 As String, Qty As Double, Amt As Double)
+    Select Case tempC2
+                    Case Is = "2028"
+                        Select Case tempC4
+                            Case Is = "4969"
+                                ws_budget.Cells(index_row, "S").Value = ws_budget.Cells(index_row, "S").Value + Qty
+                        End Select
+                End Select
+                Select Case tempC3
+                    Case Is = "3003"
+                        ws_budget.Cells(index_row, "D").Value = ws_budget.Cells(index_row, "D").Value + Amt
+                End Select
+                Select Case tempC4
+                    Case Is = "4001"
+                        'ws_budget.Cells(index_row, "F").Value = ws_budget.Cells(index_row, "F").Value + Qty
+                        Select Case tempC5
+                            Case Is = "5001"
+                                ws_budget.Cells(index_row, "F").Value = ws_budget.Cells(index_row, "F").Value + Qty
+                            Case Is = "5002"
+                                ws_budget.Cells(index_row, "G").Value = ws_budget.Cells(index_row, "G").Value + Qty
+                            Case Is = "5003"
+                                ws_budget.Cells(index_row, "H").Value = ws_budget.Cells(index_row, "H").Value + Qty
+                            Case Is = "5105"
+                                ws_budget.Cells(index_row, "H").Value = ws_budget.Cells(index_row, "H").Value + Qty
+                        End Select
+                    'Case Is = "4002"
+                        'ws_budget.Cells(index_row, "I").Value = ws_budget.Cells(index_row, "I").Value + Qty
+                    Case Is = "4004"
+                        ws_budget.Cells(index_row, "K").Value = ws_budget.Cells(index_row, "K").Value + Qty
+                    Case Is = "4006"
+                        ws_budget.Cells(index_row, "N").Value = ws_budget.Cells(index_row, "N").Value + Qty
+                    Case Is = "4038"
+                        'ws_budget.Cells(index_row, "P").Value = ws_budget.Cells(index_row, "P").Value + Qty
+                        Select Case tempC5
+                            Case Is = "5445"
+                                ws_budget.Cells(index_row, "P").Value = ws_budget.Cells(index_row, "P").Value + Qty
+                            Case Is = "5454"
+                                ws_budget.Cells(index_row, "P").Value = ws_budget.Cells(index_row, "P").Value + Qty
+                            Case Is = "5462"
+                                ws_budget.Cells(index_row, "P").Value = ws_budget.Cells(index_row, "P").Value + Qty
+                            Case Is = "5474"
+                                ws_budget.Cells(index_row, "P").Value = ws_budget.Cells(index_row, "P").Value + Qty
+                            Case Is = "5460"
+                                ws_budget.Cells(index_row, "Q").Value = ws_budget.Cells(index_row, "Q").Value + Qty
+                            Case Is = "5439"
+                                ws_budget.Cells(index_row, "Q").Value = ws_budget.Cells(index_row, "Q").Value + Qty
+                            Case Is = "5446"
+                                ws_budget.Cells(index_row, "Q").Value = ws_budget.Cells(index_row, "Q").Value + Qty
+                            Case Is = "5472"
+                                ws_budget.Cells(index_row, "Q").Value = ws_budget.Cells(index_row, "Q").Value + Qty
+                            Case Is = "5453"
+                                ws_budget.Cells(index_row, "Q").Value = ws_budget.Cells(index_row, "Q").Value + Qty
+                            Case Is = "5455"
+                                ws_budget.Cells(index_row, "R").Value = ws_budget.Cells(index_row, "R").Value + Qty
+                            Case Is = "5461"
+                                ws_budget.Cells(index_row, "R").Value = ws_budget.Cells(index_row, "R").Value + Qty
+                            Case Is = "5447"
+                                ws_budget.Cells(index_row, "R").Value = ws_budget.Cells(index_row, "R").Value + Qty
+                            Case Is = "5473"
+                                ws_budget.Cells(index_row, "R").Value = ws_budget.Cells(index_row, "R").Value + Qty
+                        End Select
+                    Case Is = "4040"
+                        'ws_budget.Cells(index_row, 5).Value = ws_budget.Cells(index_row, 5).Value + amt
+                    Case Is = "4041"
+                        ws_budget.Cells(index_row, "O").Value = ws_budget.Cells(index_row, "O").Value + Qty
+                    'Case Is = "4969"
+                        'ws_budget.Cells(index_row, "S").Value = ws_budget.Cells(index_row, "S").Value + Qty
+                End Select
+
+                Select Case tempC5
+                    Case Is = "5005"
+                        ws_budget.Cells(index_row, "J").Value = ws_budget.Cells(index_row, "J").Value + Qty
+                    Case Is = "5006"
+                        ws_budget.Cells(index_row, "J").Value = ws_budget.Cells(index_row, "J").Value + Qty
+                    Case Is = "5007"
+                        ws_budget.Cells(index_row, "J").Value = ws_budget.Cells(index_row, "J").Value + Qty
+                    Case Is = "5008"
+                        ws_budget.Cells(index_row, "I").Value = ws_budget.Cells(index_row, "I").Value + Qty
+                    Case Is = "5098"
+                        ws_budget.Cells(index_row, "M").Value = ws_budget.Cells(index_row, "M").Value + Qty
+                    Case Is = "5099"
+                        ws_budget.Cells(index_row, "L").Value = ws_budget.Cells(index_row, "L").Value + Qty
+                    Case Is = "5506"
+                        ws_budget.Cells(index_row, "M").Value = ws_budget.Cells(index_row, "M").Value + Qty
+                    Case Is = "5507"
+                        ws_budget.Cells(index_row, "L").Value = ws_budget.Cells(index_row, "L").Value + Qty
+                    Case Is = "5466"
+                        ws_budget.Cells(index_row, "M").Value = ws_budget.Cells(index_row, "M").Value + Qty
+                    Case Is = "5467"
+                        ws_budget.Cells(index_row, "L").Value = ws_budget.Cells(index_row, "L").Value + Qty
+                    Case Is = "5559"
+                        ws_budget.Cells(index_row, "M").Value = ws_budget.Cells(index_row, "M").Value + Qty
+                    
+                    Case Is = "5805"
+                        Select Case tempC6
+                            Case Is = "6532"
+                                ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                            Case Is = "6533"
+                                ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                            Case Is = "6546"
+                                ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                        End Select
+                    Case Is = "5806"
+                        Select Case tempC6
+                            Case Is = "6532"
+                                ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                            Case Is = "6533"
+                                ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                            Case Is = "6534"
+                                ws_budget.Cells(index_row, "U").Value = ws_budget.Cells(index_row, "U").Value + Qty
+                                ws_budget.Cells(index_row, "V").Value = ws_budget.Cells(index_row, "V").Value + Qty
+                            Case Is = "6535"
+                                ws_budget.Cells(index_row, "U").Value = ws_budget.Cells(index_row, "U").Value + Qty
+                            'Case Is = "6536"
+                                'ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                            'Case Is = "6537"
+                                'ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                            Case Is = "6546"
+                                ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                        End Select
+                    Case Is = "5807"
+                        Select Case tempC6
+                            Case Is = "6532"
+                                ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                            Case Is = "6533"
+                                ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                            Case Is = "6534"
+                                ws_budget.Cells(index_row, "U").Value = ws_budget.Cells(index_row, "U").Value + Qty
+                                ws_budget.Cells(index_row, "V").Value = ws_budget.Cells(index_row, "V").Value + Qty
+                            Case Is = "6535"
+                                ws_budget.Cells(index_row, "U").Value = ws_budget.Cells(index_row, "U").Value + Qty
+                            'Case Is = "6536"
+                                'ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                            'Case Is = "6537"
+                                'ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                            Case Is = "6546"
+                                ws_budget.Cells(index_row, "T").Value = ws_budget.Cells(index_row, "T").Value + Qty
+                        End Select
+
+                End Select
+End Sub
+
+
+

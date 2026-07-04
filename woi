@@ -1,0 +1,170 @@
+'檢查門市'
+'確認DEFG，IJKL欄位'
+'刪除D欄，插入新的G欄。刪除I欄，插入L新的欄'
+'對應門市與存貨類型寫入G、L'
+''
+    public  ShopStock,Brand6Stock,ShopSales,Brand6Sales,ShopWOIamount as Variant
+    public RD_shopStockRows,RD_shopStockLins,RD_brand6StockRows,RD_brand6StockLins,RD_shopSalesRows,RD_shopSalesLins,RD_brand6SalesRows,RD_brand6SalesLins as long
+
+sub woi()
+
+    worksheets("RawData").select
+    RD_shopStockRows = Worksheets("RawData").Range("E1").CurrentRegion.Rows.Count
+    RD_shopStockLins = Worksheets("RawData").Range("E2").CurrentRegion.Columns.Count
+
+    RD_brand6StockRows = Worksheets("RawData").Range("K1").CurrentRegion.Rows.Count
+    RD_brand6StockLins = Worksheets("RawData").Range("K2").CurrentRegion.Columns.Count
+
+    RD_shopSalesRows = Worksheets("RawData").Range("Q1").CurrentRegion.Rows.Count
+    RD_shopSalesLins = Worksheets("RawData").Range("Q2").CurrentRegion.Columns.Count
+
+    RD_brand6SalesRows = Worksheets("RawData").Range("W1").CurrentRegion.Rows.Count
+    RD_brand6SalesLins = Worksheets("RawData").Range("W2").CurrentRegion.Columns.Count
+
+    '將EPB貼上的資料帶入陣列'
+    '140EBa門市庫存金額'
+    ShopStock = Worksheets("RawData").Range(cells(2,5), Cells(RD_shopStockRows, RD_shopStockLins + 5)).Value
+    '140EBA門市庫存品牌_類別6'
+    Brand6Stock = Worksheets("RawData").Range(cells(2,11), Cells(RD_brand6StockRows, RD_brand6StockLins + 11)).Value
+    '090cac門市銷售數量金額'
+    ShopSales = Worksheets("RawData").Range(cells(2,17), Cells(RD_shopSalesRows, RD_shopSalesLins + 17)).Value
+    '090cac品牌＆類別6銷售數量金額'
+    Brand6Sales = Worksheets("RawData").Range(cells(2,23), Cells(RD_brand6SalesRows, RD_brand6SalesLins + 23)).Value
+
+
+    '檢查舊資料'
+
+    '執行門市週轉數量_all'
+    'shopAmountwoi
+
+    '執行門市週轉數量_all'
+    'shopQuantitywoi
+
+    '執行品牌週轉金額'
+    'BrandAmountwoi
+    
+     '執行類別6週轉數量
+    'BrandQuantitywoi
+
+    '執行類別6週轉數量'
+    'Type6Amountwoi
+
+    '執行類別6週轉數量'
+    'Type6Quantitywoi
+
+    'shopAmountwoiALL
+    shopQuantitywoiALL
+end sub
+
+Sub shopQuantitywoiALL()
+    
+'goto nextstep1
+    
+    '判斷資料表是否已複製前四週資料，需要刪除舊資料才能執行'
+    for i = 1 to worksheets.count step 1
+       if worksheets(i).name = "old門市週轉數量_all" then
+            oldtable = true
+            exit for
+        else  
+            oldtable = false
+        end if
+    next i
+
+    if oldtable = true then
+        msgbox "請先刪除舊的資料表再繼續"
+        exit sub
+    end if
+
+    Worksheets("門市週轉數量_all").Select
+    Worksheets("門市週轉數量_all").Copy after:=Worksheets("門市週轉數量_all")
+    ActiveSheet.Name = "old門市週轉數量_all"
+
+'nextstep1 :
+    
+    worksheets("門市週轉數量_all").select
+    '門市週轉數量_all寄售表'
+    shopStockRows = Worksheets("門市週轉數量_all").Range("A1").CurrentRegion.Rows.Count
+    shopStockLins = Worksheets("門市週轉數量_all").Range("A1").CurrentRegion.Columns.Count
+
+    '插入新的欄'
+    Worksheets("門市週轉數量_all").Columns("L:L").Insert Shift:=xlToRigh
+    Worksheets("門市週轉數量_all").Columns("H:H").Insert Shift:=xlToRigh
+    '1倉庫代碼,2門市代碼,3門市,4庫存(w1),5庫存(w2),6庫存(w3),7庫存(w4),8庫存(now)
+    '9銷售(w1),10銷售(w2),11銷售(w3),12銷售(w4),13銷售(now),14週庫存週轉率,15回轉週數
+
+    '插入欄位名稱'
+    Worksheets("門市週轉數量_all").cells(1,8).value = "-" 'format(date,"mm/dd")&"庫存"
+    Worksheets("門市週轉數量_all").cells(1,13).value = "-" 'format(date - 7,"mm/dd")&"-"&format(date,"mm/dd")&"銷售"
+    Worksheets("門市週轉數量_all").cells(shopStockRows+2,8).value = "-" 'format(date ,"mm/dd")&"庫存"
+    Worksheets("門市週轉數量_all").cells(shopStockRows+2,13).value = "-" 'format(date - 7,"mm/dd")&"-"&format(date,"mm/dd")&"銷售"
+
+    '開始計算 "寄售"門市週轉庫存金額跟銷售'
+    totalShopStock = 0 '總成本'
+    totalShopSales = 0 '總銷售'
+
+    '從有倉庫代碼開始迴圈'
+    for i = 3 to shopStockRows step 1
+        WHID = worksheets("門市週轉數量_all").cells(i,1).value '倉庫代碼'
+        xflag = 0 'EPB裡有無資料標籤'
+        'EPB 140EBa門市庫存金額 帶入'
+        for j = 2 to UBound(ShopStock) step 1
+            if (ShopStock(j,1) = "寄售" or ShopStock(j,1) = "成品") and ShopStock(j,2) = WHID then
+                worksheets("門市週轉數量_all").cells(i,8).value = worksheets("門市週轉數量_all").cells(i,8).value +ShopStock(j,4)
+                totalShopStock = totalShopStock + ShopStock(j,4)
+                xflag = 1
+
+            end if
+        next j
+        if xflag = 0 then 
+            worksheets("門市週轉數量_all").cells(i,8).value = 0
+        end if
+
+        yflag = 0
+        SHOPID = worksheets("門市週轉數量_all").cells(i,2).value
+        'EPB 090cac門市銷售數量金額 帶入'
+        for k = 2 to UBound(ShopSales) step 1
+            if (ShopSales(k,1) = "寄售" or ShopSales(k,1) = "成品") and ShopSales(k,2) = SHOPID then
+                worksheets("門市週轉數量_all").cells(i,13).value =worksheets("門市週轉數量_all").cells(i,13).value + ShopSales(k,4)
+                totalShopSales = totalShopSales + ShopSales(k,4)
+                yflag = 1
+
+            end if
+        next k
+        if yflag = 0 then 
+            worksheets("門市週轉數量_all").cells(i,13).value = 0
+        end if
+    next i
+
+    '合計帶入'
+    worksheets("門市週轉數量_all").cells(2,8).value = totalShopStock
+    worksheets("門市週轉數量_all").cells(2,13).value = totalShopSales
+
+    '刪除最早一週資料，讓表格維持4週'
+    Worksheets("門市週轉數量_all").Columns("J:J").delete Shift:=xlToleft
+    Worksheets("門市週轉數量_all").Columns("D:D").delete Shift:=xlToleft
+    '1倉庫代碼,2門市代碼,3門市,4庫存(w2),5庫存(w3),6庫存(w4),7庫存(now),
+    '8銷售(w2),9銷售(w3),10銷售(w4),11銷售(now),12週庫存週轉率,13回轉週數
+
+    '將新的門市週轉數量_all(寄售)新四周寫入陣列'
+    ShopWOIamount_C = Worksheets("門市週轉數量_all").Range(cells(1,1), Cells(shopStockRows, shopStockLins)).Value
+
+    for i = 2 to UBound(ShopWOIamount_C) step 1
+        saleflag = ShopWOIamount_C(i,4) + ShopWOIamount_C(i,7)
+        salesflg = ShopWOIamount_C(i,8)+ShopWOIamount_C(i,9)+ShopWOIamount_C(i,10)+ShopWOIamount_C(i,11)
+        if saleflag <> 0 then
+            worksheets("門市週轉數量_all").cells(i ,12).value = ((salesflg)/4)/(saleflag/2)
+        else
+            worksheets("門市週轉數量_all").cells(i ,12).value = 0
+        end if
+
+        if worksheets("門市週轉數量_all").cells(i ,12).value <> 0 then
+            worksheets("門市週轉數量_all").cells(i ,13).value = 1 / worksheets("門市週轉數量_all").cells(i ,12).value
+        else 
+            worksheets("門市週轉數量_all").cells(i ,13).value = 0
+        end if
+        'worksheets("門市週轉數量_all").cells(i ,8).value = ShopWOIamount_C(i,7) /totalShopStock
+        'worksheets("門市週轉數量_all").cells(i ,13).value = ShopWOIamount_C(i,12) /totalShopSales
+
+    next i
+
+End Sub
